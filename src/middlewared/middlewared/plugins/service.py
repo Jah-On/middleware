@@ -235,9 +235,9 @@ class ServiceService(CRUDService):
 
         await self.middleware.call('service.generate_etc', service_object)
 
-        return await self._restart(service, service_object)
+        return await self._restart(service, service_object, options)
 
-    async def _restart(self, service, service_object):
+    async def _restart(self, service, service_object, options):
         if service_object.restartable:
             await service_object.before_restart()
             await service_object.restart()
@@ -247,6 +247,10 @@ class ServiceService(CRUDService):
             if not state.running:
                 await self.middleware.call('service.notify_running', service)
                 self.logger.error("Service %r not running after restart", service)
+
+                if not options['silent']:
+                    raise CallError(await service_object.failure_logs() or 'Service not running after restart')
+
                 return False
 
         else:
@@ -267,6 +271,10 @@ class ServiceService(CRUDService):
             if not state.running:
                 await self.middleware.call('service.notify_running', service)
                 self.logger.error("Service %r not running after restart-caused start", service)
+
+                if not options['silent']:
+                    raise CallError(await service_object.failure_logs() or 'Service not running after restart')
+
                 return False
 
             await service_object.after_start()
@@ -302,9 +310,12 @@ class ServiceService(CRUDService):
                 return True
             else:
                 self.logger.error("Service %r not running after reload", service)
+                if not options['silent']:
+                    raise CallError(await service_object.failure_logs() or 'Service not running after reload')
+
                 return False
         else:
-            return await self._restart(service, service_object)
+            return await self._restart(service, service_object, options)
 
     SERVICES = {}
 

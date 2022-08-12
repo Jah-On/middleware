@@ -225,7 +225,7 @@ class NFSService(SystemServiceService):
 
         await self.nfs_compress(new)
 
-        await self._update_service(old, new, "restart")
+        await self._update_service(old, new, "restart", False)
 
         return await self.config()
 
@@ -319,7 +319,7 @@ class SharingNFSService(SharingService):
         )
         await self.extend(data)
 
-        await self._service_change("nfs", "reload")
+        await self._service_change("nfs", "reload", False)
 
         return await self.get_instance(data["id"])
 

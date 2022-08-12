@@ -435,7 +435,7 @@ class Service(object, metaclass=ServiceBase):
 
 
 class ServiceChangeMixin:
-    async def _service_change(self, service, verb):
+    async def _service_change(self, service, verb, silent=True):
 
         svc_state = (await self.middleware.call(
             'service.query',
@@ -449,7 +449,7 @@ class ServiceChangeMixin:
         await self.middleware.call('etc.generate', 'rc')
 
         if svc_state == 'running':
-            started = await self.middleware.call(f'service.{verb}', service)
+            started = await self.middleware.call(f'service.{verb}', service, {'silent': silent})
 
             if not started:
                 raise CallError(
@@ -759,12 +759,12 @@ class SystemServiceService(ConfigService):
         )
 
     @private
-    async def _update_service(self, old, new, verb=None):
+    async def _update_service(self, old, new, verb=None, silent=True):
         await self.middleware.call('datastore.update',
                                    f'services.{self._config.service_model or self._config.service}', old['id'], new,
                                    {'prefix': self._config.datastore_prefix})
 
-        fut = self._service_change(self._config.service, verb or self._config.service_verb)
+        fut = self._service_change(self._config.service, verb or self._config.service_verb, silent)
         if self._config.service_verb_sync:
             await fut
         else:

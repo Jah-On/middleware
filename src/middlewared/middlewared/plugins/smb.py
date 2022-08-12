@@ -895,7 +895,7 @@ class SMBService(TDBWrapConfigService):
             job = await self.middleware.call('smb.synchronize_group_mappings')
             await job.wait()
 
-        await self._service_change(self._config.service, 'restart')
+        await self._service_change(self._config.service, 'restart', False)
         return new_config
 
     @private
@@ -1057,9 +1057,9 @@ class SharingSMBService(SharingService):
 
         if do_global_reload:
             await self.middleware.call('smb.initialize_globals')
-            await self._service_change('cifs', 'restart')
+            await self._service_change('cifs', 'restart', False)
         else:
-            await self._service_change('cifs', 'reload')
+            await self._service_change('cifs', 'reload', False)
 
         if ha_mode == SMBHAMODE.CLUSTERED:
             ret = await self.query([('name', '=', data['name'])],
@@ -1129,9 +1129,9 @@ class SharingSMBService(SharingService):
             do_global_reload = guest_changed or await self.must_reload_globals(new)
             if do_global_reload:
                 await self.middleware.call('smb.initialize_globals')
-                await self._service_change('cifs', 'restart')
+                await self._service_change('cifs', 'restart', False)
             else:
-                await self._service_change('cifs', 'reload')
+                await self._service_change('cifs', 'reload', False)
 
             return await self.query([('name', '=', share_name)],
                                     {'get': True, 'extra': {'ha_mode': ha_mode.name}})
@@ -1221,9 +1221,9 @@ class SharingSMBService(SharingService):
 
         if do_global_reload:
             await self.middleware.call('smb.initialize_globals')
-            await self._service_change('cifs', 'restart')
+            await self._service_change('cifs', 'restart', False)
         else:
-            await self._service_change('cifs', 'reload')
+            await self._service_change('cifs', 'reload', False)
 
         if check_mdns or old['timemachine'] != new['timemachine']:
             await self.middleware.call('service.restart', 'mdns')

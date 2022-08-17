@@ -90,7 +90,7 @@ def test_04_verify_gluster_volume_is_started(volume, request):
 def test_05_verify_gluster_volume_is_fuse_mounted(ip, request):
     depends(request, ['STARTED_GVOLUME'])
 
-    total_time_to_wait = 10
+    total_time_to_wait = 30
     sleepy_time = 1
     while total_time_to_wait > 0:
         # give each node a little time to actually fuse mount the volume before we claim failure

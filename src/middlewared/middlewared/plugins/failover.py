@@ -172,6 +172,7 @@ class FailoverService(ConfigService):
           ECHOWARP
           PUMA
           BHYVE
+          VIKING
           MANUAL
         """
         return (await self.middleware.call('failover.ha_mode'))[0]

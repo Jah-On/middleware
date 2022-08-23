@@ -23,6 +23,9 @@ class InternalInterfaceService(Service):
         if hardware == 'BHYVE':
             return ['enp0s6f1']
 
+        if hardware == 'VIKING':
+            return ['ntb0']
+
         # Detect Z-series heartbeat interface
         if hardware == 'ECHOSTREAM':
             for i in glob.iglob(INTERFACE_GLOB):

@@ -39,6 +39,13 @@ class EnclosureDetectionService(Service):
 
             return self.HARDWARE, self.NODE
 
+        if manufacturer == 'Viking Enterprise Solutions':
+            self.HARDWARE = 'VIKING' 
+            proc = subprocess.run(['ipmitool', 'sdr', 'get', 'Master Sensor'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = proc.stdout.decode() if proc.stdout else ''
+            self.NODE = 'A' if 'Present' in proc else 'B'
+            return self.HARDWARE, self.NODE
+
         # Gather the PCI address for all enclosurers
         # detected by the kernel
         enclosures = self.middleware.call_sync("enclosure.list_ses_enclosures")

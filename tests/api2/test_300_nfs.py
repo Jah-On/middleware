@@ -513,6 +513,7 @@ def test_37_check_nfs_allow_nonroot_behavior(request):
     parsed = parse_exports()
     assert len(parsed) == 1, str(parsed)
     assert 'insecure' not in parsed[0]['opts'][0]['parameters'], str(parsed)
+    sleep(5)
 
 
 def test_38_check_nfs_service_v4_parameter(request):
@@ -540,6 +541,7 @@ def test_38_check_nfs_service_v4_parameter(request):
 
     s = parse_server_config()
     assert "-N 4" not in s["RPCNFSDOPTS"], str(s)
+    sleep(5)
 
 
 def test_39_check_nfs_service_udp_parameter(request):
@@ -567,6 +569,7 @@ def test_39_check_nfs_service_udp_parameter(request):
 
     s = parse_server_config()
     assert "--no-udp" in s["RPCNFSDOPTS"], str(s)
+    sleep(5)
 
 
 def test_40_check_nfs_service_ports(request):

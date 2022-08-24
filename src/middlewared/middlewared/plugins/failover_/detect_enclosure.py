@@ -39,6 +39,7 @@ class EnclosureDetectionService(Service):
 
             return self.HARDWARE, self.NODE
 
+        manufacturer = self.middleware.call_sync('system.dmidecode_info')['system-manufacturer']
         if manufacturer == 'Viking Enterprise Solutions':
             self.HARDWARE = 'VIKING' 
             proc = subprocess.run(['ipmitool', 'sdr', 'get', 'Master Sensor'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

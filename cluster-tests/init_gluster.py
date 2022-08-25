@@ -155,7 +155,7 @@ def add_public_ips_to_ctdb():
             try:
                 status = wait_on_job(res.json(), priv_ip, 5)
             except JobTimeOut:
-                assert False, JobTimeOut
+                assert False, f'timed out while adding {pub_ip} to {this_node}'
             else:
                 assert status['state'] == 'SUCCESS', status
 

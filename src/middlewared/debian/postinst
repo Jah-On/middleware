@@ -24,6 +24,9 @@ case "$1" in
             cp /data/factory-v1.db /data/freenas-v1.db
         fi
         touch /data/need-update
+
+        # Set permissions to 0o600 for database
+        chmod 600 /data/freenas-v1.db /data/factory-v1.db
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

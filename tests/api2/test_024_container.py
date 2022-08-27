@@ -268,7 +268,8 @@ if not ha:
         assert job_status['state'] == 'SUCCESS', str(job_status['results'])
         results = job_status['results']['result']
         assert isinstance(results, dict), str(job_status['results'])
-
+        
+    @pytest.mark.skip(reason='debug linux runner')    
     def test_21_verify_truecomand_ix_chart_pod_status_desired_is_1(request):
         depends(request, ['tc_chart_release'])
         results = GET(f'/chart/release/id/{tc_release_id}/')

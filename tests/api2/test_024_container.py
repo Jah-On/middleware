@@ -277,6 +277,7 @@ if not ha:
         assert results.json()['pod_status']['desired'] == 1, results.text
 
     @pytest.mark.dependency(name='tc_externalInterfaces')
+    @pytest.mark.skip(reason='debug linux runner')
     def test_22_set_externalInterfaces(request):
         depends(request, ['tc_chart_release'])
         global gateway

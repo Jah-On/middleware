@@ -1,3 +1,4 @@
+from middlewared.plugins.sysdataset import SYSDATASET_PATH
 from middlewared.schema import Bool, Dict, List, Str, Int
 from middlewared.service import (accepts, filterable, private, periodic, CRUDService)
 from middlewared.service_exception import CallError
@@ -35,6 +36,45 @@ class ShareSec(CRUDService):
     class Config:
         namespace = 'smb.sharesec'
         cli_namespace = 'sharing.smb.sharesec'
+
+    tdb_options = {
+        'backend': 'CUSTOM',
+        'data_type': 'BYTES'
+    }
+
+    @private
+    async def toggle_share(self, share_name, enable):
+        if (await self.middleware.call('smb.get_smb_ha_mode')) == 'CLUSTERED':
+            return
+
+        if enable:
+           old = f'#{share_name}'
+           new = share_name
+        else:
+           old = share_name
+           new = f'#{share_name}'
+
+        try:
+            val = await self.middleware.call('tdb.fetch', {
+                'name': f'{SYSDATASET_PATH}/samba4/share_info.tdb',
+                'key': old
+                'tdb-options': self.tdb_options
+            }
+        except MatchNotFound:
+            return
+
+        await self.middleware.call('tdb.put', {
+            'name': f'{SYSDATASET_PATH}/samba4/share_info.tdb',
+            'key': new
+            'value': val
+            'tdb-options': self.tdb_options
+        }
+
+        await self.middleware.call('tdb.remove', {
+            'name': f'{SYSDATASET_PATH}/samba4/share_info.tdb',
+            'key': old
+            'tdb-options': self.tdb_options
+        }
 
     @private
     async def parse_share_sd(self, sd, options=None):

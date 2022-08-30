@@ -31,7 +31,10 @@ class TDBWrap(object):
         return False
 
     def validate_handle(self):
+        if not os.path.exists(f'/proc/self/fd/{self.opath_fd}'):
+            return False
         # if file has been renamed or deleted from under us, readlink will show different path
+
         return os.readlink(f'/proc/self/fd/{self.opath_fd}') == self.full_path
 
     def get(self, key):

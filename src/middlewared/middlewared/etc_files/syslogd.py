@@ -302,6 +302,7 @@ def configure_syslog(middleware):
     if symlink:
         os.symlink(log_path, "/var/log")
 
+    middleware.call_sync('smb.setup_directories')
     reconfigure_logging(middleware)
 
 

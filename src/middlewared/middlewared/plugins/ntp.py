@@ -1,10 +1,9 @@
 from middlewared.schema import accepts, Bool, Dict, Int, Str, Patch, IPAddr
 from middlewared.service import ValidationErrors, CRUDService, private, filterable
-from middlewared.utils import filter_list
+from middlewared.utils import filter_list, chrony
 from middlewared.service_exception import CallError
 import middlewared.sqlalchemy as sa
 
-import ntplib
 import subprocess
 
 
@@ -71,7 +70,7 @@ class NTPServerService(CRUDService):
             'datastore.insert', self._config.datastore, data,
             {'prefix': self._config.datastore_prefix})
 
-        await self.middleware.call('service.restart', 'ntpd')
+        await self.middleware.call('service.restart', 'chrony')
 
         return await self.get_instance(data['id'])
 
@@ -98,7 +97,7 @@ class NTPServerService(CRUDService):
             'datastore.update', self._config.datastore, id, new,
             {'prefix': self._config.datastore_prefix})
 
-        await self.middleware.call('service.restart', 'ntpd')
+        await self.middleware.call('service.restart', 'chrony')
 
         return await self.get_instance(id)
 
@@ -108,23 +107,20 @@ class NTPServerService(CRUDService):
         """
         response = await self.middleware.call('datastore.delete', self._config.datastore, id)
 
-        await self.middleware.call('service.restart', 'ntpd')
+        await self.middleware.call('service.restart', 'chrony')
 
         return response
 
     @staticmethod
     @private
     def test_ntp_server(addr):
-        client = ntplib.NTPClient()
-        server_alive = False
-        try:
-            response = client.request(addr)
-            if response.version:
-                server_alive = True
-        except Exception:
-            pass
+	client = chrony.ChronyClient()
+	try:
+		return client.is_alive()
+	except Exception:
+		self.logger.error('Unable to connect to NTP server.', exc_info=True)
 
-        return server_alive
+	return False
 
     @private
     @filterable
@@ -150,6 +146,7 @@ class NTPServerService(CRUDService):
         if not self.middleware.call_sync('system.ready'):
             return peers
 
+	# TODO: TONY: Unsure - but i think this is definitely broken...
         resp = subprocess.run(['ntpq', '-np'], capture_output=True)
         if resp.returncode != 0 or resp.stderr:
             raise CallError(resp.stderr.decode().strip())

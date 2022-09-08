@@ -21,12 +21,19 @@ server ${ntp['address']}\
 
 % endfor
 % if ntp_query:
-restrict default ignore
-restrict -6 default ignore
-restrict 127.0.0.1
-restrict -6 ::1
-restrict 127.127.1.0
+deny default 
+deny 127.0.0.1
+deny ::1
+deny 127.127.1.0
+#restrict default ignore
+#restrict -6 default ignore
+#restrict 127.0.0.1
+#restrict -6 ::1
+#restrict 127.127.1.0
 % for ntp in ntp_query:
-restrict ${ntp['address']} nomodify notrap nopeer noquery
+#restrict ${ntp['address']} nomodify notrap nopeer noquery
+allow ${ntp['address']} 
 % endfor
+driftfile /var/lib/chrony/drift
+dumpdir /var/run/chrony
 % endif

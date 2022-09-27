@@ -10,7 +10,7 @@ class NFSService(SimpleService):
     systemd_unit = "nfs-server"
 
     async def systemd_extra_units(self):
-        return ["rpc-statd"]
+        return ["rpc-statd", "nfs-idmapd"]
 
     async def after_start(self):
         await self._systemd_unit("rpc-statd", "start")

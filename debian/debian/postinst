@@ -38,6 +38,7 @@ systemctl disable nmbd
 systemctl disable smbd
 systemctl disable winbind
 systemctl disable wsdd
+systemctl disable nfs-idmapd
 systemctl disable walinuxagent
 systemctl disable openipmi
 

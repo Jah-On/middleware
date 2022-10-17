@@ -267,3 +267,4 @@ def test_21_get_the_vlan1_interface_from_id(request):
     depends(request, ['PENDING_FALSE'])
     results = GET(f'/interface/id/{interfaces_id}/', controller_a=ha)
     assert results.status_code == 200, results.text
+

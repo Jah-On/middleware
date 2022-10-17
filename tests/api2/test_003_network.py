@@ -103,3 +103,4 @@ def test_05_verify_network_general_summary_default_routes(request):
 
 def test_06_verify_network_general_summary_ips():
     assert any(i.startswith(ip) for i in RESULTS['ips'][interface]['IPV4'])
+

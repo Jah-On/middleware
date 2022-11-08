@@ -44,9 +44,7 @@ class DOSFlag(IntFlag):
 
 
 def get_dosflags(path: str) -> dict:
-    o_path_fd = os.open(path, os.O_PATH)
-    isdir = stat.S_ISDIR(os.fstat(o_path_fd).st_mode)
-    fd = pathref_reopen(o_path_fd, os.O_DIRECTORY if isdir else os.O_RDONLY, close_fd=True)
+    fd = os.open(path, os.O_RDONLY)
 
     try:
         rv = get_dosflags_impl(path, fd)

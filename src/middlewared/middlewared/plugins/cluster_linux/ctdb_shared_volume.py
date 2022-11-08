@@ -77,7 +77,7 @@ class CtdbSharedVolumeService(Service):
                 bricks.append(i + ':' + ctdb_sysds_path)
 
             options = {'args': (CTDB_VOL_NAME, bricks,)}
-            options['kwargs'] = {'replica': len(con_peers), 'force': True}
+            options['kwargs'] = {'disperse': len(con_peers), 'redundancy': 1, 'force': True}
             await self.middleware.call('gluster.method.run', volume.create, options)
 
         # make sure the shared volume is configured properly to prevent

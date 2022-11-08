@@ -26,22 +26,6 @@ class CtdbSharedVolumeService(Service):
             # calling this method
             raise CallError(f'{CTDB_VOL_NAME} does not exist', errno.ENOENT)
 
-        for i in ctdb:
-            err_msg = f'A volume named "{CTDB_VOL_NAME}" already exists '
-            if i['type'] != 'REPLICATE':
-                err_msg += (
-                    'but is not a "REPLICATE" type volume. '
-                    'Please delete or rename this volume and try again.'
-                )
-                raise CallError(err_msg)
-            elif i['replica'] < 3 or i['num_bricks'] < 3:
-                err_msg += (
-                    'but is configured in a way that '
-                    'could cause data corruption. Please delete '
-                    'or rename this volume and try again.'
-                )
-                raise CallError(err_msg)
-
     @job(lock=CRE_OR_DEL_LOCK)
     async def create(self, job):
         """

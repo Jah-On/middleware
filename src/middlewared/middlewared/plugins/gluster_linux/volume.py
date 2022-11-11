@@ -137,11 +137,12 @@ class GlusterVolumeService(CRUDService):
         await self.middleware.call('gluster.method.run', volume.create, options)
         await self.middleware.call('gluster.volume.start', {'name': name})
         await self.middleware.call('gluster.volume.store_workdir')
-        return await self.middleware.call('gluster.volume.query', [('id', '=', name)])
 
-        # TODO: initialize ctdb_shared_vol dir on root of gluster volume
-        # ctdb_job = await self.middleware.call('ctdb.shared.volume.create')
-        # await ctdb_job.wait(raise_error=True)
+        # initialize ctdb_shared_vol dir on root of gluster volume
+        ctdb_init = await self.middleware.call('ctdb.root_dir.init', name)
+        await ctdb_init.wait(raise_error=True)
+
+        return await self.middleware.call('gluster.volume.query', [('id', '=', name)])
 
     @accepts(Dict(
         'volume_start',

@@ -4,7 +4,7 @@ from middlewared.utils import filter_list
 from middlewared.service import CRUDService, accepts, job, filterable, private, ValidationErrors
 from middlewared.schema import Dict, Str, Int, Bool, List, Ref, returns
 from middlewared.plugins.cluster_linux.utils import CTDBConfig, FuseConfig
-from .utils import GlusterConfig, set_gluster_workdir_dataset, get_gluster_workdir_dataset
+from .utils import GlusterConfig, set_gluster_workdir_dataset, get_gluster_workdir_dataset, format_bricks
 
 
 GLUSTER_JOB_LOCK = GlusterConfig.CLI_LOCK.value
@@ -126,7 +126,6 @@ class GlusterVolumeService(CRUDService):
         `redundancy` Integer representing number of redundancy bricks
         `force` Boolean, if True ignore potential warnings
         """
-
         schema_name = 'glustervolume_create'
         await self.middleware.call('gluster.volume.common_validation', data, schema_name)
 
@@ -134,22 +133,16 @@ class GlusterVolumeService(CRUDService):
         # events for which we act upon (i.e. FUSE mounting)
         await self.middleware.call('service.start', 'glustereventsd')
 
-        # before we create the gluster volume, we need to ensure
-        # the ctdb shared volume is setup
-        ctdb_job = await self.middleware.call('ctdb.shared.volume.create')
-        await ctdb_job.wait(raise_error=True)
-
         name = data.pop('name')
-
-        bricks = []
-        for i in data.pop('bricks'):
-            bricks.append(i['peer_name'] + ':' + i['peer_path'])
-
-        options = {'args': (name, bricks,), 'kwargs': data}
+        options = {'args': (name, await format_bricks(data.pop('bricks')),), 'kwargs': data}
         await self.middleware.call('gluster.method.run', volume.create, options)
         await self.middleware.call('gluster.volume.start', {'name': name})
         await self.middleware.call('gluster.volume.store_workdir')
         return await self.middleware.call('gluster.volume.query', [('id', '=', name)])
+
+        # TODO: initialize ctdb_shared_vol dir on root of gluster volume
+        # ctdb_job = await self.middleware.call('ctdb.shared.volume.create')
+        # await ctdb_job.wait(raise_error=True)
 
     @accepts(Dict(
         'volume_start',

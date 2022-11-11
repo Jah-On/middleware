@@ -126,8 +126,7 @@ class GlusterVolumeService(CRUDService):
         `redundancy` Integer representing number of redundancy bricks
         `force` Boolean, if True ignore potential warnings
         """
-        schema_name = 'glustervolume_create'
-        await self.middleware.call('gluster.volume.common_validation', data, schema_name)
+        await self.common_validation(data, 'glustervolume_create')
 
         # make sure this is started since it's responsible for sending
         # events for which we act upon (i.e. FUSE mounting)

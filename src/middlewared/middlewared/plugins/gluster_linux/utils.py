@@ -51,6 +51,10 @@ class GlusterConfig(enum.Enum):
     ]
 
 
+async def format_bricks(bricks):
+    return [f'{i["peer_name"]}:{i["peer_path"]}' for i in bricks]
+
+
 def get_gluster_workdir_dataset():
     try:
         with open(GlusterConfig.WORKDIR_DS_CACHE.value, 'r') as f:

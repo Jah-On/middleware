@@ -255,12 +255,16 @@ class CTDBConfig(enum.Enum):
     CTDB_ETC_EVENT_SCRIPT_DIR = os.path.join(CTDB_ETC, 'events/legacy')
     CTDB_USR_EVENT_SCRIPT_DIR = '/usr/share/ctdb/events/legacy/'
 
+    # this file is created on 1st gluster volume creation
+    CTDB_ROOT_DIR_LOCATION = os.path.join(SMB_BASE, 'ctdb_root_dir_location')
+
     # used in the ctdb.shared.volume.teardown method
     CTDB_FILES_TO_REMOVE = [
         ETC_GEN_FILE,
         ETC_REC_FILE,
         ETC_PRI_IP_FILE,
         ETC_PUB_IP_FILE,
+        CTDB_ROOT_DIR_LOCATION,
     ]
 
     # used in the ctdb.shared.volume.teardown method

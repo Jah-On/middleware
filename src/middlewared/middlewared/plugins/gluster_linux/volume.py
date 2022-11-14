@@ -67,16 +67,11 @@ class GlusterVolumeService(CRUDService):
 
     @private
     async def common_validation(self, data, schema_name):
-        verrors = ValidationErrors()
-        create_request = schema_name == 'glustervolume_create'
-
-        if data['name'] == CTDB_VOL_NAME and create_request:
-            verrors.add(
+        if schema_name == 'glustervolume_create' and len(data['bricks']) < 3:
+            raise ValidationErrors(
                 f'{schema_name}.{data["name"]}',
-                f'"{data["name"]}" is a reserved name. Choose a different volume name.'
+                'At least 3 peers are required to create a cluster to prevent split-brain.'
             )
-
-        verrors.check()
 
     @private
     def store_workdir(self):
@@ -126,9 +121,7 @@ class GlusterVolumeService(CRUDService):
         `redundancy` Integer representing number of redundancy bricks
         `force` Boolean, if True ignore potential warnings
         """
-
-        schema_name = 'glustervolume_create'
-        await self.middleware.call('gluster.volume.common_validation', data, schema_name)
+        await self.middleware.call('gluster.volume.common_validation', data, 'glustervolume_create')
 
         # make sure this is started since it's responsible for sending
         # events for which we act upon (i.e. FUSE mounting)

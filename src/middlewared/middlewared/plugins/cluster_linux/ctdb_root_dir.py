@@ -3,6 +3,7 @@ import os
 
 import pyglfs
 from middlewared.service import Service, CallError, job
+from .utils import CTDBConfig
 
 LOCK = 'ctdb-init-lock'
 ROOT_DIR_NAME = 'ctdb-root-dir'
@@ -55,3 +56,20 @@ class CtdbRootDirService(Service):
         gid = 0 if stat.st_gid != 0 else -1
         if uid == 0 or gid == 0:
             dir_fd.fchown(uid, gid)
+
+    def set_location(self, gvol_name):
+        """
+        This will create a file that stores the `gvol_name` for which we've created
+        and stored the ctdb daemon configuration.
+        """
+        with open(CTDBConfig.CTDB_ROOT_DIR_LOCATION.value, 'w') as f:
+            f.write(gvol_name)
+
+    def get_location(self):
+        try:
+            with open(CTDBConfig.CTDB_ROOT_DIR_LOCATION.value) as f:
+                gvol_name = f.read().strip()
+        except FileNotFoundError:
+            return None
+        else:
+            return gvol_name

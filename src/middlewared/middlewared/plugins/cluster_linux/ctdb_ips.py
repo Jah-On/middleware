@@ -11,31 +11,25 @@ class CtdbIpService(Service):
         private = True
 
     async def common_validation(self, data, schema_name, verrors):
-
         # make sure that the cluster shared volume is mounted
         if not await self.middleware.call('service.started', 'glusterd'):
-            verrors.add(
-                f'{schema_name}.glusterd',
-                'The "glusterd" service is not started.',
-            )
+            verrors.add(f'{schema_name}.glusterd', 'The "glusterd" service is not started.')
+        elif not data['gvol']:
+            verrors.add(f'{schema_name}.gvol', 'Unable to determine gluster volume that stores ctdb config.')
+        else:
+            try:
+                shared_vol = pathlib.Path(f'/cluster/{data["gvol"]}')
+                mounted = shared_vol.is_mount()
+            except Exception:
+                mounted = False
 
-        try:
-            shared_vol = pathlib.Path(CTDBConfig.CTDB_LOCAL_MOUNT.value)
-            mounted = shared_vol.is_mount()
-        except Exception:
-            mounted = False
-
-        if not mounted:
-            verrors.add(
-                f'{schema_name}.{shared_vol}',
-                f'"{shared_vol}" is not mounted'
-            )
+            if not mounted:
+                verrors.add(f'{schema_name}.{shared_vol}', f'{shared_vol!r} is not mounted')
 
         verrors.check()
 
         if schema_name in ('private_create', 'public_create'):
             existing_public_ips = {}
-
             if schema_name == 'public_create':
                 public_ips_for_node = await self.middleware.call(
                     'ctdb.public.ips.query', [('pnn', '=', data['pnn'])]
@@ -59,25 +53,17 @@ class CtdbIpService(Service):
                         f'{schema_name}.{data["interface"]}',
                         f'"{data["interface"]}" not found on this system.',
                     )
-
         elif schema_name == 'public_delete':
             return
-
         else:
             address = data.get('address') or data['public_ip']
 
             # data['enable'] is the update request
             # data['enabled'] is the current status in cluster
             if not data['enable'] and not data['enabled']:
-                verrors.add(
-                    f'{schema_name}.{address}',
-                    f'"{address}" is already disabled in the cluster.'
-                )
+                verrors.add(f'{schema_name}.{address}', f'"{address}" is already disabled in the cluster.')
             elif data['enable'] and data['enabled']:
-                verrors.add(
-                    f'{schema_name}.{address}',
-                    f'"{address}" is already enabled in the cluster.'
-                )
+                verrors.add(f'{schema_name}.{address}', f'"{address}" is already enabled in the cluster.')
 
         verrors.check()
 
@@ -85,16 +71,16 @@ class CtdbIpService(Service):
         """
         Update the ctdb cluster private or public IP file.
         """
-
         is_private = schema_name in ('private_create', 'private_update')
         create = schema_name in ('private_create', 'public_create')
         enable = data.get('enable', False)
 
+        base = f'/cluster/{data["gvol"]}/'
         if is_private:
-            ctdb_file = pathlib.Path(CTDBConfig.GM_PRI_IP_FILE.value)
+            ctdb_file = pathlib.Path(f'{base}/nodes')
             etc_file = pathlib.Path(CTDBConfig.ETC_PRI_IP_FILE.value)
         else:
-            ctdb_file = pathlib.Path(f'{CTDBConfig.GM_PUB_IP_FILE.value}_{data["pnn"]}')
+            ctdb_file = pathlib.Path(f'{base}/public_addresses_{data["pnn"]}')
             etc_file = pathlib.Path(CTDBConfig.ETC_PUB_IP_FILE.value)
 
         if is_private:

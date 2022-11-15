@@ -55,30 +55,24 @@ class CtdbPublicIpService(CRUDService):
         information about cluster. Examples problematic states are:
 
         - ctdb or glusterd are not running on this node
-
-        - ctdb shared volume is not mounted
         """
         if not self.middleware.call_sync('service.started', 'ctdb'):
-            raise CallError(
-                "ctdb is not running. Unable to gather public address info",
-                errno.ENXIO
-            )
+            raise CallError('ctdb is not running. Unable to gather public address info', errno.ENXIO)
+        elif not (gvol := self.middleware.call_sync('ctdb.root_dir.get_location')):
+            raise CallError('Unable to determine gluster volume that stores ctdb config', errno.ENXIO)
 
-        ctdb_ips = self.middleware.call_sync('ctdb.general.ips')
-
+        base = f'/cluster/{gvol}'
         try:
-            shared_vol = Path(CTDBConfig.CTDB_LOCAL_MOUNT.value)
+            shared_vol = Path(base)
             mounted = shared_vol.is_mount()
         except Exception:
-            # can happen when mounted but glusterd service
-            # is stopped/crashed etc
+            # can happen when mounted but glusterd service is stopped/crashed etc
             mounted = False
 
         if not mounted:
-            raise CallError("CTDB shared volume is in unhealthy state.", errno.ENXIO)
+            raise CallError('Gluster volume that stores ctdb config is in unhealthy state', errno.ENXIO)
 
         nodes = {}
-
         for entry in self.middleware.call_sync('ctdb.general.listnodes'):
             """
             Skip disabled nodes since they cannot hold public addresses.
@@ -117,7 +111,7 @@ class CtdbPublicIpService(CRUDService):
                             }
                         })
 
-        for entry in ctdb_ips:
+        for entry in self.middleware.call_sync('ctdb.general.ips'):
             if not nodes.get(entry['pnn']):
                 """
                 Most likely case here is that we're transitioning IP and it's

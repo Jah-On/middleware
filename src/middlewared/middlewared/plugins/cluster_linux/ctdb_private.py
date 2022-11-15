@@ -27,17 +27,18 @@ class CtdbPrivateIpService(CRUDService):
         #       see the changes in the file. So return what
         #       the daemon sees.
         #   2. else
-        #       if the ctdb shared volume  is mounted and /etc/ private
-        #       ip file exists and is a symlink and the symlink is
-        #       pointed to the /cluster private ip file then read it
-        #       and return the contents
+        #       if the gluster volume that stores the ctdb config
+        #       is mounted and /etc/ private ip file exists and is
+        #       a symlink and the symlink is pointed to the /cluster
+        #       private ip file then read it and return the contents
         ips = []
         if self.middleware.call_sync('service.started', 'ctdb'):
             ips = self.middleware.call_sync('ctdb.general.listnodes')
             ips = list(map(lambda i: dict(i, id=i['pnn']), ips))
-        else:
+        elif gvol := self.middleware.call_sync('ctdb.root_dir.get_location'):
+            base = f'/cluster/{gvol}'
             try:
-                shared_vol = Path(CTDBConfig.CTDB_LOCAL_MOUNT.value)
+                shared_vol = Path(base)
                 mounted = shared_vol.is_mount()
             except Exception:
                 # can happen when mounted but glusterd service
@@ -45,7 +46,7 @@ class CtdbPrivateIpService(CRUDService):
                 mounted = False
 
             if mounted:
-                pri_ip_file = Path(CTDBConfig.GM_PRI_IP_FILE.value)
+                pri_ip_file = Path(f'{base}/nodes')
                 etc_ip_file = Path(CTDBConfig.ETC_PRI_IP_FILE.value)
                 if pri_ip_file.exists():
                     if etc_ip_file.is_symlink() and etc_ip_file.resolve() == pri_ip_file:

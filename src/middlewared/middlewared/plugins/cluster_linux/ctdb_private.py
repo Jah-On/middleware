@@ -75,6 +75,7 @@ class CtdbPrivateIpService(CRUDService):
 
         schema_name = 'private_create'
         verrors = ValidationErrors()
+        data['gvol'] = await self.middleware.call('ctdb.root_dir.get_location')
 
         await self.middleware.call('ctdb.ips.common_validation', data, schema_name, verrors)
         await self.middleware.call('ctdb.ips.update_file', data, schema_name)
@@ -102,6 +103,7 @@ class CtdbPrivateIpService(CRUDService):
 
         data = await self.get_instance(id)
         data['enable'] = option['enable']
+        data['gvol'] = await self.middleware.call('ctdb.root_dir.get_location')
 
         await self.middleware.call('ctdb.ips.common_validation', data, schema_name, verrors)
         await self.middleware.call('ctdb.ips.update_file', data, schema_name)

@@ -127,11 +127,6 @@ class GlusterVolumeService(CRUDService):
         # events for which we act upon (i.e. FUSE mounting)
         await self.middleware.call('service.start', 'glustereventsd')
 
-        # before we create the gluster volume, we need to ensure
-        # the ctdb shared volume is setup
-        ctdb_job = await self.middleware.call('ctdb.shared.volume.create')
-        await ctdb_job.wait(raise_error=True)
-
         name = data.pop('name')
         bricks = await format_bricks(data.pop('bricks'))
         options = {'args': (name, bricks,), 'kwargs': data}
@@ -139,6 +134,14 @@ class GlusterVolumeService(CRUDService):
         await self.middleware.call('gluster.method.run', volume.create, options)
         await self.middleware.call('gluster.volume.start', {'name': name})
         await self.middleware.call('gluster.volume.store_workdir')
+        if not await self.middleware.call('ctdb.root_dir.get_location'):
+            # we store the root ctdb dir on the 1st gluster volume that is created
+            await self.middleware.call('ctdb.root_dir.set_location', name)
+
+            peers = [i.split(':')[0] for i in bricks]
+            ctdb_job = await self.middleware.call('ctdb.root_dir.setup', name, peers)
+            await ctdb_job.wait(raise_error=True)
+
         return await self.middleware.call('gluster.volume.query', [('id', '=', name)])
 
     @accepts(Dict(

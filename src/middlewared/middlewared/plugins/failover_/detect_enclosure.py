@@ -41,12 +41,13 @@ class EnclosureDetectionService(Service):
 
             return self.HARDWARE, self.NODE
 
+# Viking info via VSS2249RQ Management Over IPMI document Section 5.5 page 15
         manufacturer = self.middleware.call_sync('system.dmidecode_info')['system-manufacturer']
         if manufacturer == 'Viking Enterprise Solutions':
             self.HARDWARE = 'VIKING' 
-            proc = subprocess.run(['ipmitool', 'sdr', 'get', 'Master Sensor'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.run(['ipmitool', 'raw',  '0x3c', '0x0e'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc = proc.stdout.decode() if proc.stdout else ''
-            self.NODE = 'A' if 'Present' in proc else 'B'
+            self.NODE = 'A' if proc[6] == 0  else 'B'
             return self.HARDWARE, self.NODE
 
         # Gather the PCI address for all enclosurers

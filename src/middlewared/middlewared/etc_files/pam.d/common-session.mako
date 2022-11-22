@@ -11,18 +11,10 @@
         dsp = pam.getDirectoryServicePam(middleware=middleware, render_ctx=render_ctx)
 %>\
 
-# here are the per-package modules (the "Primary" block)
-session	[default=1]			pam_permit.so
-# here's the fallback if no module succeeds
-session	requisite			pam_deny.so
-# prime the stack with a positive return value if there isn't one already;
-# this avoids us returning an error just because nothing sets a success code
-# since the modules above will each just jump around
-session	required			pam_permit.so
-# and here are more per-package modules (the "Additional" block)
+@include common-session-unix-header
+
 % if dsp.enabled() and dsp.name() != 'NIS':
 ${dsp.pam_session()}
 % endif
-session	required	pam_unix.so
-session	optional	pam_systemd.so
-# end of pam-auth-update config
+
+@include common-session-unix-footer

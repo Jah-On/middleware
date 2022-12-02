@@ -130,7 +130,12 @@ class LockableFSAttachmentDelegate(FSAttachmentDelegate):
         await self.middleware.call(f'{self.namespace}.remove_locked_alert', attachment['id'])
 
     async def is_child_of_path(self, resource, path):
-        return is_child(resource[self.path_field], path)
+        # We want to make sure we cover following cases:
+        # 1) When parent of configured path is specified we return true
+        # 2) When configured path itself is specified we return true
+        # 3) When path is child of configured path, we return true as the path
+        #    is being consumed by service in question
+        return is_child(resource[self.path_field], path) or is_child(path, resource[self.path_field])
 
     async def start(self, attachments):
         for attachment in attachments:

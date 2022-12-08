@@ -1,32 +1,4 @@
 #!/bin/sh
-#+
-# Copyright 2011 iXsystems, Inc.
-# All rights reserved
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted providing that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-#####################################################################
-
-
 system_opt() { echo t; }
 system_help() { echo "Dump System Information"; }
 system_directory() { echo "System"; }
@@ -127,31 +99,11 @@ system_func()
 	fi
 
 	ret1=$(midclt call system.is_enterprise)
-	if [ "x${ret1}" = "xTrue" ]; then
-		ret2=$(midclt call failover.status)
-		section_header "HA db journal status"
-		if [ "x${ret2}" != "xSINGLE" ]; then
-			if [ -s /data/ha-journal ]; then
-				echo "Warning: database sync journal has entries"
-			else
-				echo "Database sync journal normal"
-			fi
-		else
-			echo "Non-HA TrueNAS system detected"
-		fi
-		section_footer
-	fi
-
-	if [ "x${ret1}" = "xFalse" ];
+	if [ "x${ret1}" = "xTrue" ];
 	then
-		if [ "x${ret2}" != "xSINGLE" ];
-		then
-			section_header "hactl output"
-			hactl
-			section_footer
-		else
-			echo "Non-HA TrueNAS system detected"
-		fi
+		section_header "hactl output"
+		hactl
+		section_footer
 	fi
 
 	section_header "Failed updates /data/update.failed"

@@ -1,32 +1,4 @@
 #!/bin/sh
-#+
-# Copyright 2014 iXsystems, Inc.
-# All rights reserved
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted providing that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-#####################################################################
-
-
 smart_opt() { echo S; }
 smart_help() { echo "Dump SMART Information"; }
 smart_directory() { echo "SMART"; }
@@ -58,11 +30,7 @@ smart_func()
 	section_footer
 
 	section_header "SMARTD Run Status"
-	if is_linux; then
-		systemctl status smartd
-	else
-		service smartd-daemon onestatus
-	fi
+	systemctl status smartd
 	section_footer
 
 	section_header "Scheduled SMART Jobs"
@@ -84,17 +52,13 @@ smart_func()
 	section_header "smartctl output"
 	rm -f /tmp/smart.out 2>/dev/null
 
-	if is_linux; then
-		# from /proc/devices
-		# only care about sd/vd/nvme major numbers
-		# sd* = 8 - 135
-		# vd* (virtio) = 254
-		# nvmeXnY* = 259
-		include="8,65,66,67,68,69,70,71,128,129,130,131,132,133,134,135,254,259"
-		disks=$(lsblk -ndo name -I $include)
-	else
-		disks=$(sysctl -n kern.disks)
-	fi
+	# from /proc/devices
+	# only care about sd/vd/nvme major numbers
+	# sd* = 8 - 135
+	# vd* (virtio) = 254
+	# nvmeXnY* = 259
+	include="8,65,66,67,68,69,70,71,128,129,130,131,132,133,134,135,254,259"
+	disks=$(lsblk -ndo name -I $include)
 
 	# SAS to SATA interposers could be involed. Unfortunately,
 	# there is no "easy" way of identifying that there is
@@ -107,17 +71,7 @@ smart_func()
 	# we'll try to run it without translation
 	for i in $disks; do
 		case "$i" in
-		    nvd*)
-			ns=$(nvmecontrol nsid $i | awk '{print $1}')
-			output=$(smartctl -a /dev/$ns)
-		        msg="(NVME DEVICE DETECTED)"
-		        # double-quotes are important here to
-		        # maintain original formatting
-		        echo "/dev/$ns $msg" >> /tmp/smart.out
-		        echo "$output" >> /tmp/smart.out
-		        echo "" >> /tmp/smart.out
-		    ;;
-		    da*|sd*|vd*)
+		    sd*|vd*)
 			# try with translation first
 			msg="(USING TRANSLATION)"
 			output=$(timeout 3 smartctl -a -d sat /dev/$i)

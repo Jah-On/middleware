@@ -1,36 +1,8 @@
 #!/bin/sh
-#+
-# Copyright 2011 iXsystems, Inc.
-# All rights reserved
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted providing that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-#####################################################################
-
-
 network_opt() { echo n; }
 network_help() { echo "Dump Network Configuration"; }
 network_directory() { echo "Network"; }
-get_gw_in_linux_for_ip()
+get_gw()
 {
 	gw=""
 	output=$(ip route get "$1" from "$2" 2> /dev/null)
@@ -65,7 +37,7 @@ network_func()
 			ips=$(ip address show dev ${i} | grep '\binet\b' | awk '{ print $2 }' | cut -d'/' -f1 | xargs)
 			if [ -n "${ips}" ]; then
 				for ip in ${ips}; do
-					gw=$(get_gw_in_linux_for_ip "8.8.8.8" "$ip")
+					gw=$(get_gw "8.8.8.8" "$ip")
 					if [ -n "${gw}" ]; then
 						echo "\tDefault IPv4 gateway: ${gw}"
 					fi
@@ -75,7 +47,7 @@ network_func()
 			ips6=$(ip address show dev ${i} | grep '\binet6\b' | awk '{ print $2 }' | cut -d'/' -f1 | xargs)
 			if [ -n "${ips6}" ]; then
 				for ip6 in ${ips6}; do
-					gw=$(get_gw_in_linux_for_ip "2001:4860:4860::8888" "$ip6")
+					gw=$(get_gw "2001:4860:4860::8888" "$ip6")
 					if [ -n "${gw}" ]; then
 						echo "\tDefault IPv6 gateway: ${gw}"
 					fi

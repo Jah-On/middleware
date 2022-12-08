@@ -1,36 +1,4 @@
 #!/bin/sh
-#+
-# Copyright 2011 iXsystems, Inc.
-# All rights reserved
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted providing that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-#####################################################################
-
-if is_freebsd; then
-	test -e /etc/rc.freenas && . /etc/rc.freenas
-	test -e /etc/rc.conf.local && . /etc/rc.conf.local
-fi
-
 #
 # This is the directory where we save things
 #
@@ -157,30 +125,16 @@ freenas_header()
 		section_header "no version file found"
 	fi
 
-	if is_linux; then
-		kernel_prefix="kernel"
-	else
-		kernel_prefix="kern"
-	fi
-
-	out=$(sysctl -n "$kernel_prefix".ostype)
+	out=$(sysctl -n kernel.ostype)
 	echo "Operating system type: ${out}"
 
-	out=$(sysctl -n "$kernel_prefix".osrelease)
+	out=$(sysctl -n kernel.osrelease)
 	echo "Operating system release: ${out}"
 
-	if is_freebsd; then
-		out=$(sysctl -n kern.osrevision)
-		echo "Operating system revision: ${out}"
-
-		out=$(sysctl -n kern.bootfile)
-		echo "Name of kernel file booted: ${out}"
-	fi
-
-	out=$(sysctl -n "$kernel_prefix".version)
+	out=$(sysctl -n kernel.version)
 	echo "Kernel version: ${out}"
 
-	out=$(sysctl -n "$kernel_prefix".hostname)
+	out=$(sysctl -n kernel.hostname)
 	echo "Hostname: ${out}"
 
 	section_footer

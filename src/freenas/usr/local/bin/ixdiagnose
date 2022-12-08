@@ -6,9 +6,6 @@
 # to it.
 #
 
-# Bring in platform specific bits
-. /usr/local/share/system_info
-
 # If there is a system dataset use it
 tmpdir="/var/db/system"
 if [ ! -e "${tmpdir}" ]; then tmpdir="/var/tmp"; fi
@@ -116,14 +113,6 @@ truncate_files ()
 	done
 }
 
-if is_freebsd; then
-	# Make text dump freebsd only until we implement saving dumps in linux
-	test -e /etc/rc.conf && . /etc/rc.conf
-	[ "$dumpdir" = "" ] && dumpdir="$dumpdir"
-	textdump=$(get_textdump)
-fi
-
-has_ticket_info=false
 dont_delete=false
 print=false
 limit=10000000
@@ -212,30 +201,7 @@ if [ -d /var/db/system/cores ]; then
 	done
 fi
 
-if is_freebsd; then
-	if ! dumpfile_to_submit_exists $dumpdir ; then
-		if [ $? = 2 ] ; then
-			exit 2
-		fi
-	else
-		echo "** 97%: Compressing Textdump"
-		mkdir "$dir/textdump"
-		tar -xvf $textdump -C "$dir/textdump"
-		cp $dumpdir/info.last "$dir/textdump"
-	fi
-fi
 echo "** 98%: Collecting Additional Information"
-if is_linux; then
-	path_prefix="/usr"
-else
-	path_prefix="/usr/local"
-	sysctl hw > "$dir/sysctl_hw"
-fi
-set +e
-"$path_prefix"/sbin/dmidecode > "$dir/dmidecode"
-"$path_prefix"/bin/cpuid > "$dir/cpuid"
-set -e
-
 if [ -d /root/syslog ]; then
         cp -R /root/syslog "$dir"
 fi
@@ -250,22 +216,6 @@ fi
 
 if [ -f /etc/version ] ; then
 	cp /etc/version "$dir/version"
-fi
-
-if is_freebsd; then
-	set +e
-	ls /dev/ses* 2> /dev/null | while read -r ses; do
-		echo "** 98%: Collecting smp_rep_phy_err_log"
-		name=$(echo ${ses}|cut -d "/" -f 3)
-		/sbin/camcontrol smpphylist ${ses} > "$dir/smpphylist.${name}"
-		/usr/local/bin/smp_rep_phy_err_log ${ses} > "$dir/smp_rep_phy_err_log.${name}"
-		cat $dir/smpphylist.${name} | tail -n +3 | while read -r num val desc; do
-			if [ -n "${desc}" ]; then
-				/usr/local/bin/smp_rep_phy_err_log ${ses} -p ${num} > "$dir/smp_rep_phy_err_log.${name}.${num}"
-			fi
-		done
-	done
-	set -e
 fi
 
 echo "** 99%: Compressing Archive"

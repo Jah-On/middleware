@@ -1223,6 +1223,15 @@ class ZFSSnapshot(CRUDService):
         ):
             kwargs = {}
             other_filters = []
+
+            if not filters and options.get('count'):
+                snaps = self.count()
+                cnt = 0
+                for entry in snaps.values():
+                    cnt += entry
+
+                return cnt
+
             for f in filters:
                 if len(f) == 3 and f[0] in ['pool', 'dataset'] and f[1] in ['=', 'in']:
                     if f[1] == '=':
@@ -1235,14 +1244,6 @@ class ZFSSnapshot(CRUDService):
                 else:
                     other_filters.append(f)
             filters = other_filters
-
-            if not filters and options.get('count'):
-                snaps = self.count()
-                cnt = 0
-                for entry in snaps.values():
-                    cnt += entry
-
-                return cnt
 
             with libzfs.ZFS() as zfs:
                 snaps = zfs.snapshots_serialized(['name'], min_txg=min_txg, max_txg=max_txg, **kwargs)

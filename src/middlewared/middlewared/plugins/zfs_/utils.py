@@ -141,6 +141,7 @@ def get_snapshot_count_cached(middleware, lz, datasets, prefetch=False, update_d
         key (dataset name) : value (int - snapshot count)
     """
     def get_mountpoint(zhdl):
+        return None
         mp = zhdl['properties'].get('mountpoint')
         if mp is None:
             return None

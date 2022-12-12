@@ -32,7 +32,9 @@ class SnapshotCountAlertSource(AlertSource):
 
         total = 0
         datasets = await self.middleware.call("zfs.snapshot.count")
+        snaps = await self.middleware.call("zfs.snapshot.query", [["dataset", "=", "tank/snapshot_count"]], {'count': True}) 
 
+        self.middleware.logger.debug("XXX: ds: %s,  snaps: %d", datasets, snaps)
         for cnt in datasets.values():
             total += cnt
 

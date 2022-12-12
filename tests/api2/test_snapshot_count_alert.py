@@ -19,8 +19,9 @@ def test_snapshot_total_count_alert(request):
 
             call("zfs.snapshot.create", {"dataset": ds, "name": "snap-10"})
 
-            alert = call("alert.run_source", "SnapshotCount")[0]
-            assert alert["text"] % alert["args"] == (
+            alert = call("alert.run_source", "SnapshotCount")
+            assert alert != []
+            assert alert[0]["text"] % alert[0]["args"] == (
                 f"Your system has more snapshots ({base + 11}) than recommended ({base + 10}). Performance or "
                 "functionality might degrade."
             )

@@ -161,7 +161,9 @@ def get_snapshot_count_cached(middleware, lz, datasets, prefetch=False, update_d
                 if st.st_ino == ZFSCTL.INO_SNAPDIR.value:
                     return st.st_nlink - 2
 
-        return len(lz.snapshots_serialized(['name'], datasets=[zhdl['name']], recursive=False))
+        cnt = len(lz.snapshots_serialized(['name'], datasets=[zhdl['name']], recursive=False))
+        middleware.logger.debug("XXX: entry_get_cnt [%s]: %d", zhdl['name'], cnt)
+        return cnt
 
     def get_entry_prefetch(key, tdb_entries):
         return tdb_entries.get(key, {'changed_ts': None, 'cnt': -1})
@@ -202,6 +204,7 @@ def get_snapshot_count_cached(middleware, lz, datasets, prefetch=False, update_d
 
         entry = get_entry_fn(cache_key, tdb_entries)
 
+        middleware.logger.debug("XXX: name: [%s] t1 [%s] t2 [%s]", zhdl['name'], entry['changed_ts'], changed_ts)
         if entry['changed_ts'] != changed_ts:
             entry['cnt'] = entry_get_cnt(zhdl)
             entry['changed_ts'] = changed_ts

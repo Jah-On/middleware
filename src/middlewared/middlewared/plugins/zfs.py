@@ -1192,7 +1192,9 @@ class ZFSSnapshot(CRUDService):
         try:
             with libzfs.ZFS() as zfs:
                 datasets = zfs.datasets_serialized(**kwargs)
-                return get_snapshot_count_cached(self.middleware, zfs, datasets, prefetch)
+                out = get_snapshot_count_cached(self.middleware, zfs, datasets, prefetch)
+                self.logger.debug("XXX: snapshot_count: %s", out)
+                return out
 
         except libzfs.ZFSException as e:
             raise CallError(str(e))

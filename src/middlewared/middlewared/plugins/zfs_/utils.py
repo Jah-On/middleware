@@ -204,11 +204,12 @@ def get_snapshot_count_cached(middleware, lz, datasets, prefetch=False, update_d
         if entry['changed_ts'] != changed_ts:
             entry['cnt'] = entry_get_cnt(zhdl)
             entry['changed_ts'] = changed_ts
-            batch_ops.append({
-                'action': 'SET',
-                'key': cache_key,
-                'val': entry
-            })
+            if changed_ts:
+                batch_ops.append({
+                    'action': 'SET',
+                    'key': cache_key,
+                    'val': entry
+                })
 
         out[zhdl['name']] = entry['cnt']
         if update_datasets:

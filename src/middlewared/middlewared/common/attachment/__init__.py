@@ -1,5 +1,5 @@
 from middlewared.service import ServiceChangeMixin
-from middlewared.utils.path import is_child
+from middlewared.utils.path import is_child_realpath
 
 
 class FSAttachmentDelegate(ServiceChangeMixin):
@@ -131,7 +131,7 @@ class LockableFSAttachmentDelegate(FSAttachmentDelegate):
 
     async def is_child_of_path(self, resource, path):
         share_path = await self.service_class.get_path_field(self.service_class, resource)
-        return is_child(share_path, path)
+        return await self.middleware.run_in_thread(is_child_realpath, share_path, path)
 
     async def start(self, attachments):
         for attachment in attachments:

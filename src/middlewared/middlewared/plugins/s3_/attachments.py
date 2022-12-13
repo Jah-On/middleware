@@ -3,7 +3,7 @@ import os
 from middlewared.common.attachment import FSAttachmentDelegate
 from middlewared.common.attachment.certificate import CertificateServiceAttachmentDelegate
 from middlewared.common.ports import ServicePortDelegate
-from middlewared.utils.path import is_child
+from middlewared.utils.path import is_child_realpath
 
 
 class MinioFSAttachmentDelegate(FSAttachmentDelegate):
@@ -15,16 +15,18 @@ class MinioFSAttachmentDelegate(FSAttachmentDelegate):
         results = []
 
         s3_config = await self.middleware.call('s3.config')
-        if not s3_config['storage_path'] or not os.path.exists(s3_config['storage_path']):
+        if not s3_config['storage_path']:
             return []
 
         try:
             s3_ds = await self.middleware.call('zfs.dataset.path_to_dataset', s3_config['storage_path'])
+        except FileNotFoundError:
+            return []
         except Exception:
             self.middleware.logger.warning('%s: failed to look up dataset', s3_config['storage_path'], exc_info=True)
             return []
 
-        if is_child(os.path.join('/mnt', s3_ds), path):
+        if await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', s3_ds), path):
             results.append({'id': s3_ds})
 
         return results

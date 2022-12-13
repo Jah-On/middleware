@@ -48,26 +48,6 @@ class iSCSITargetExtentService(SharingService):
         datastore_extend = 'iscsi.extent.extend'
         cli_namespace = 'sharing.iscsi.extent'
 
-    @private
-    async def sharing_task_datasets(self, data):
-        if data['type'] == 'DISK':
-            if data['path'].startswith('zvol/'):
-                return [zvol_path_to_name(f'/dev/{data["path"]}')]
-            else:
-                return []
-
-        return await super().sharing_task_datasets(data)
-
-    @private
-    async def sharing_task_determine_locked(self, data, locked_datasets):
-        if data['type'] == 'DISK':
-            if data['path'].startswith('zvol/'):
-                return any(zvol_path_to_name(f'/dev/{data["path"]}') == d['id'] for d in locked_datasets)
-            else:
-                return False
-        else:
-            return await super().sharing_task_determine_locked(data, locked_datasets)
-
     @accepts(Dict(
         'iscsi_extent_create',
         Str('name', required=True),
@@ -267,6 +247,13 @@ class iSCSITargetExtentService(SharingService):
     @private
     async def validate_path_resides_in_volume(self, verrors, schema, path):
         await check_path_resides_within_volume(verrors, self.middleware, schema, path)
+
+    @private
+    async def get_path_field(self, data):
+        if data['type'] == 'DISK' and data[self.path_field].startswith('zvol/'):
+            return os.path.join('/mnt', zvol_path_to_name(os.path.join('/dev', data[self.path_field])))
+
+        return data[self.path_field]
 
     @private
     def clean_type_and_path(self, data, schema_name, verrors):

@@ -6,7 +6,7 @@ from middlewared.schema import accepts, returns, Bool, Cron, Dataset, Dict, Int,
 from middlewared.service import CallError, CRUDService, item_method, private, ValidationErrors
 import middlewared.sqlalchemy as sa
 from middlewared.utils.cron import croniter_for_schedule
-from middlewared.utils.path import is_child
+from middlewared.utils.path import is_child, is_child_realpath
 from middlewared.validators import ReplicationSnapshotNamingSchema
 
 
@@ -434,7 +434,7 @@ class PeriodicSnapshotTaskFSAttachmentDelegate(FSAttachmentDelegate):
     async def query(self, path, enabled, options=None):
         results = []
         for task in await self.middleware.call('pool.snapshottask.query', [['enabled', '=', enabled]]):
-            if is_child(os.path.join('/mnt', task['dataset']), path):
+            if await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', task['dataset']), path):
                 results.append(task)
 
         return results

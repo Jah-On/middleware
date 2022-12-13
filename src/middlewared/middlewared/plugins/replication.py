@@ -6,7 +6,7 @@ from middlewared.common.attachment import FSAttachmentDelegate
 from middlewared.schema import accepts, Bool, Cron, Dataset, Dict, Int, List, Patch, returns, Str
 from middlewared.service import item_method, job, private, CallError, CRUDService, ValidationErrors
 import middlewared.sqlalchemy as sa
-from middlewared.utils.path import is_child
+from middlewared.utils.path import is_child, is_child_realpath
 from middlewared.validators import Port, Range, ReplicationSnapshotNamingSchema, Unique
 
 
@@ -893,12 +893,12 @@ class ReplicationFSAttachmentDelegate(FSAttachmentDelegate):
         results = []
         for replication in await self.middleware.call('replication.query', [['enabled', '=', enabled]]):
             if replication['transport'] == 'LOCAL' or replication['direction'] == 'PUSH':
-                if any(is_child(os.path.join('/mnt', source_dataset), path)
+                if any(await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', source_dataset), path)
                        for source_dataset in replication['source_datasets']):
                     results.append(replication)
 
             if replication['transport'] == 'LOCAL' or replication['direction'] == 'PULL':
-                if is_child(os.path.join('/mnt', replication['target_dataset']), path):
+                if await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', replication['target_dataset']), path):
                     results.append(replication)
 
         return results

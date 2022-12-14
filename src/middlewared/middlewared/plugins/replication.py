@@ -893,7 +893,7 @@ class ReplicationFSAttachmentDelegate(FSAttachmentDelegate):
         results = []
         for replication in await self.middleware.call('replication.query', [['enabled', '=', enabled]]):
             if replication['transport'] == 'LOCAL' or replication['direction'] == 'PUSH':
-                if any(await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', source_dataset), path)
+                if any((await self.middleware.run_in_thread(is_child_realpath, os.path.join('/mnt', source_dataset)), path)
                        for source_dataset in replication['source_datasets']):
                     results.append(replication)
 

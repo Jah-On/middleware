@@ -21,7 +21,7 @@ class NFSModel(sa.Model):
     nfs_srv_servers = sa.Column(sa.Integer(), default=4)
     nfs_srv_udp = sa.Column(sa.Boolean(), default=False)
     nfs_srv_allow_nonroot = sa.Column(sa.Boolean(), default=False)
-    nfs_srv_v4 = sa.Column(sa.Boolean(), default=False)
+    nfs_srv_protocols = sa.Column(sa.JSON(type=list), default=['NFSV3', 'NFSV4'])
     nfs_srv_v4_v3owner = sa.Column(sa.Boolean(), default=False)
     nfs_srv_v4_krb = sa.Column(sa.Boolean(), default=False)
     nfs_srv_bindip = sa.Column(sa.MultiSelectField())
